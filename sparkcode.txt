@@ -1,0 +1,17 @@
+
+from pyspark.sql import SQLContext
+from pyspark.sql.types import *
+SqlContext = SQLContext(sc)
+df = sqlContext.read.load('file:///home/sushil/Desktop/Project/AppleStore.csv', 
+                          format='com.databricks.spark.csv', 
+                          header='true', 
+                          inferSchema='true')
+df.count()
+df = (df.withColumn('price', df.price.cast('double')))
+
+df.select(avg("price")).show()
+
+df.registerTempTable('df')
+sqlCtx.sql('SELECT price, prime_genre FROM df ORDER BY primer_genre').
+sqlCtx.sql('SELECT prime_genre,avg(price)  FROM df group by prime_genre').show()
+sqlCtx.sql('SELECT prime_genre,avg(price)  FROM df group by prime_genre').write.mode("append").csv("/home/sushil/Desktop/abc.csv")

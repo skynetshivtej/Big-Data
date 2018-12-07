@@ -1,0 +1,161 @@
+Hive Query 1
+create table AppStore (num int,
+id int,
+track_name varchar(50),
+size_byte int,
+currency varchar(50),
+price float,
+rating_count_tot int,
+rating_count_ver int,
+user_rating int, 
+user_rating_ver float,
+ver float, 
+cont_rating varchar(50), 
+prime_genre varchar(50),
+sup_devices int,
+ipadScurl int,
+lang int, 
+vpplic int);
+
+
+
+
+load data infile '/home/sushil/Desktop/Project/AppStore.csv' into table AppStore fields terminated by ',' lines terminated by '\n';
+
+
+
+
+
+Hive Query 1
+
+
+
+
+hive -e 'set hive.cli.print.header=true; select prime_genre,count(prime_genre) from AppStore group by prime_genre' | sed 's/[\t]/,/g'  > /home/hduser/Desktop/test.csv
+
+
+ 
+Hive Query 2
+hive -e 'set hive.cli.print.header=true; select sup_devices,lang,rating_count_tot from AppStore group by lang,sup_devices,rating_count_tot;' | sed 's/[\t]/,/g'  > /home/hduser/Desktop/test1.csv
+
+
+
+
+create table HAppStore (num int,
+id int,
+track_name string,
+size_byte int,
+currency string,
+price float,
+rating_count_tot int,
+rating_count_ver int,
+user_rating int, 
+user_rating_ver float,
+ver float, 
+cont_rating string, 
+prime_genre string,
+sup_devices int,
+ipadScurl int,
+lang int, 
+vpplic int) row format delimited fields terminated by ',' stored as textfile;
+
+
+
+create database pdaproject;
+
+use pdaproject;
+
+
+
+
+
+
+
+sqoop import --connect jdbc:mysql://localhost/pdaproject --username root --password cloudera --table AppStore --m 1
+
+sqoop import --connect jdbc:mysql://127.0.0.1/pdaproject --username root --password march2017 --table AppStore --hive-import --create-hive-table --hive-table AppStore;
+
+
+;
+
+
+Pig Query 1
+
+
+AppStore = LOAD '/home/sushil/Desktop/Project/AppleStore.csv' USING  PigStorage(',') AS (num:INT,id:INT,track_name:chararray,size_byte:INT,currency:chararray,price:FLOAT,rating_count_tot:INT,rating_count_ver:INT,user_rating:FLOAT,user_rating_ver:FLOAT,ver:FLOAT,cont_rating:chararray,prime_genre:chararray,sup_devices:chararray,ipadscur:INT,lang:INT,vpplic:INT);
+
+orders = ORDER AppStore  BY price DESC;
+
+
+top15 =  LIMIT orders  15;
+
+
+writee = FOREACH top15 GENERATE (price,prime_genre);
+
+DUMP writee;
+
+STORE writee into '/home/hduser/Desktop/test2.csv' USING PigStorage(',');
+
+
+
+Pig Query 2
+
+
+
+
+take = FOREACH AppStore GENERATE (user_rating_ver-user_rating);
+
+
+avgg  = Group take  By  rating_count_tot ;
+
+rate = group avgg By user_rating;
+counta = Foreach rate by sup_devices;
+DUMP counta;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+STORE writee into '/home/hduser/Desktop/test3.csv' USING PigStorage(',');
+
+Spak Code 
+
+from pyspark.sql import SQLContext
+
+from pyspark.sql.types import *
+
+SqlContext = SQLContext(sc)
+
+df = sqlContext.read.load('file:///home/sushil/Desktop/Project/AppleStore.csv', 
+                          
+				format='com.databricks.spark.csv', 
+                          
+				header='true', 
+                          
+				inferSchema='true')
+
+df.count()
+df = (df.withColumn('price', df.price.cast('double')))
+
+df.select(avg("price")).show()
+
+
+df.registerTempTable('df')
+sqlCtx.sql('SELECT price, prime_genre FROM df ORDER BY primer_genre').
+
+sqlCtx.sql('SELECT prime_genre,avg(price)  FROM df group by prime_genre').show()
+
+sqlCtx.sql('SELECT prime_genre,avg(price)  FROM df group by prime_genre').write.mode("append").csv("/home/sushil/Desktop/abc.csv")
+
+
+One Query is built in excel to address the business question which is not possible in other tools.
